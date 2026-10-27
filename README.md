@@ -5,8 +5,8 @@
 ---
 
 ## 🔗 Live Application & Repository
-- **Live Deployment**: Deployed on Vercel
-- **GitHub Repository**: [https://github.com/aasan/knowledge-assistant](https://github.com/aasan/knowledge-assistant)
+- **Live Deployment**: [https://p2-knowledge-assistant.vercel.app](https://p2-knowledge-assistant.vercel.app)
+- **GitHub Repository**: [https://github.com/Aasana28/knowledge-assistant](https://github.com/Aasana28/knowledge-assistant)
 
 ---
 
