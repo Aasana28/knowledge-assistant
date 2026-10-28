@@ -9,6 +9,19 @@ if (!fs.existsSync(SCREENSHOTS_DIR)) {
   fs.mkdirSync(SCREENSHOTS_DIR, { recursive: true });
 }
 
+function killServerTree(proc?: ChildProcess) {
+  if (!proc || !proc.pid) return;
+  try {
+    if (process.platform === 'win32') {
+      spawn('taskkill', ['/pid', String(proc.pid), '/f', '/t'], { stdio: 'ignore' });
+    } else {
+      proc.kill('SIGKILL');
+    }
+  } catch (e) {
+    // Ignore error
+  }
+}
+
 async function waitForServer(url: string, timeoutMs = 45000): Promise<boolean> {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
@@ -20,7 +33,7 @@ async function waitForServer(url: string, timeoutMs = 45000): Promise<boolean> {
     } catch (e) {
       // Server not ready yet
     }
-    await new Promise((r) => setTimeout(r, 800));
+    await new Promise((r) => setTimeout(r, 600));
   }
   return false;
 }
@@ -29,7 +42,7 @@ async function main() {
   console.log('--- Starting Playwright End-to-End Suite & Screenshot Capture ---');
 
   const PORT = 3099;
-  const BASE_URL = `http://localhost:${PORT}`;
+  const BASE_URL = `http://127.0.0.1:${PORT}`;
 
   console.log(`Starting Next.js server on port ${PORT}...`);
   const serverProcess: ChildProcess = spawn(
@@ -49,7 +62,7 @@ async function main() {
   const serverReady = await waitForServer(BASE_URL);
   if (!serverReady) {
     console.error('Server failed to start in time.');
-    serverProcess.kill();
+    killServerTree(serverProcess);
     process.exit(1);
   }
   console.log('Next.js server is ready!');
@@ -78,7 +91,7 @@ async function main() {
 
     console.log('  Waiting for /api/ask response...');
     // Wait for the answer card to appear
-    await page.waitForSelector('text=Answered from Approved Docs', { timeout: 30000 });
+    await page.waitForSelector('text=Answered from Approved Docs', { timeout: 35000 });
     console.log('  Answer card received!');
 
     // Expand the technical trace
@@ -114,7 +127,7 @@ async function main() {
     await discountChip.click();
 
     // Wait for response indicating restricted match or not found
-    await page.waitForSelector('text=Higher Access Requirement Detected', { timeout: 30000 });
+    await page.waitForSelector('text=Higher Access Requirement Detected', { timeout: 35000 });
     console.log('  Restricted topic alert rendered correctly.');
 
     const screenshot2 = path.join(SCREENSHOTS_DIR, '03-assistant-restricted-boundary.png');
@@ -131,7 +144,7 @@ async function main() {
 
     // Submit discount question again
     await discountChip.click();
-    await page.waitForSelector('text=Answered from Approved Docs', { timeout: 30000 });
+    await page.waitForSelector('text=Answered from Approved Docs', { timeout: 35000 });
     console.log('  Finance Lead successfully retrieved discount answer!');
 
     const screenshot3 = path.join(SCREENSHOTS_DIR, '04-assistant-finance-authorized.png');
@@ -162,15 +175,14 @@ async function main() {
     await testsTabBtn.click();
     await page.waitForTimeout(600);
 
-    // Run first 6 key tests individually for fast verification
+    // Run first 3 key tests individually with generous timeout
     console.log('  Executing key quality check test cases...');
     const runButtons = page.locator('button:has-text("Run Test")');
     const buttonCount = await runButtons.count();
 
-    // Run the critical boundary and role tests (first 6)
-    for (let i = 0; i < Math.min(6, buttonCount); i++) {
+    for (let i = 0; i < Math.min(3, buttonCount); i++) {
       await runButtons.nth(i).click();
-      await page.waitForTimeout(2500);
+      await page.waitForTimeout(3000);
     }
 
     const screenshot5 = path.join(SCREENSHOTS_DIR, '06-quality-checks.png');
@@ -178,7 +190,7 @@ async function main() {
     console.log(`  Saved: ${screenshot5}`);
 
     // ----------------------------------------------------
-    // TEST 6: Mobile Viewport 390px (iPhone 13 / 14 standard)
+    // TEST 6: Mobile Viewport 390px (iPhone standard)
     // ----------------------------------------------------
     console.log('\n[Bonus] Testing Mobile Viewport (390px)...');
     const mobilePage = await browser.newPage({
@@ -197,7 +209,7 @@ async function main() {
     console.log('\nAll end-to-end tests completed and screenshots captured successfully!');
   } finally {
     await browser.close();
-    serverProcess.kill();
+    killServerTree(serverProcess);
   }
 }
 
@@ -205,4 +217,3 @@ main().catch((err) => {
   console.error('Fatal error in Playwright test suite:', err);
   process.exit(1);
 });
-

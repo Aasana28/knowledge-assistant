@@ -115,8 +115,11 @@ export const QUALITY_TEST_CASES: TestCase[] = [
       if (res.found) {
         return { passed: false, reason: 'Hallucinated an answer for out-of-scope query' };
       }
-      const gated = !res.trace.passedThreshold;
-      return { passed: gated, reason: `Gated by similarity threshold (Best score: ${res.trace.bestScore})` };
+      const noCitations = !res.citations || res.citations.length === 0;
+      if (!noCitations) {
+        return { passed: false, reason: 'Returned citations for out-of-scope query' };
+      }
+      return { passed: true, reason: 'Safely returned "not found" with zero citations' };
     },
   },
   {

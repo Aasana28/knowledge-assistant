@@ -100,7 +100,7 @@ User Query + Active Role
 
 ### 2. Clone and Install
 ```bash
-git clone https://github.com/aasan/knowledge-assistant.git
+git clone https://github.com/Aasana28/knowledge-assistant.git
 cd knowledge-assistant
 npm install
 ```

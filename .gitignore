@@ -37,3 +37,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# local agent rules
+AGENT_RULES.md
+
+# local test helper
+scripts/run-all-18-checks.ts
